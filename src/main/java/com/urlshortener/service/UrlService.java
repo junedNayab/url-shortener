@@ -88,7 +88,7 @@ public class UrlService {
     @Transactional
     public String resolve(String shortCode, String ipAddress, String userAgent, String referrer) {
         // Try Redis cache first
-        String cachedUrl = redisTemplate.opsForValue().get(CACHE_PREFIX + shortCode);
+        String cachedUrl = getCachedUrl(shortCode);
         if (cachedUrl != null) {
             recordClick(shortCode, ipAddress, userAgent, referrer);
             return cachedUrl;
@@ -139,7 +139,7 @@ public class UrlService {
             throw new IllegalArgumentException("You don't own this URL");
         }
 
-        redisTemplate.delete(CACHE_PREFIX + shortCode);
+        evictCachedUrl(shortCode);
         urlRepository.delete(url);
     }
 
@@ -156,6 +156,23 @@ public class UrlService {
             redisTemplate.opsForValue().set(CACHE_PREFIX + shortCode, originalUrl, 24, TimeUnit.HOURS);
         } catch (Exception e) {
             log.warn("Failed to cache URL in Redis: {}", e.getMessage());
+        }
+    }
+
+    private String getCachedUrl(String shortCode) {
+        try {
+            return redisTemplate.opsForValue().get(CACHE_PREFIX + shortCode);
+        } catch (Exception e) {
+            log.warn("Redis cache read failed, falling back to database: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private void evictCachedUrl(String shortCode) {
+        try {
+            redisTemplate.delete(CACHE_PREFIX + shortCode);
+        } catch (Exception e) {
+            log.warn("Failed to evict URL from Redis: {}", e.getMessage());
         }
     }
 

@@ -89,28 +89,58 @@ mvn spring-boot:run
 
 On Windows PowerShell, set the variable with `$env:JWT_SECRET = "..."` before starting the app.
 
-## Deployment
+### Option 3: No Docker, no database install
 
-### Railway (Recommended)
+For a quick look at the API, run against an in-memory H2 database with Redis absent. H2 is already
+on the test classpath, so nothing needs to be installed:
 
-Railway can run the Dockerized API together with managed PostgreSQL and Redis services:
-
-1. In Railway, create a project and choose **Deploy from GitHub repo**.
-2. Select this repository. Railway will build the root `Dockerfile`.
-3. Add **PostgreSQL** and **Redis** services to the same Railway project.
-4. Add these variables to the application service:
-
-```text
-SPRING_DATASOURCE_URL=jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}
-SPRING_DATASOURCE_USERNAME=${{Postgres.PGUSER}}
-SPRING_DATASOURCE_PASSWORD=${{Postgres.PGPASSWORD}}
-SPRING_DATA_REDIS_URL=${{Redis.REDIS_URL}}
-JWT_SECRET=<a random value of at least 32 characters>
+```powershell
+$env:JWT_SECRET = "LocalDemoSecretKeyThatIsAtLeast32CharactersLong"
+$env:SPRING_DATASOURCE_URL = "jdbc:h2:mem:demo"
+$env:SPRING_DATASOURCE_DRIVER_CLASS_NAME = "org.h2.Driver"
+$env:SPRING_DATASOURCE_USERNAME = "sa"
+$env:SPRING_DATASOURCE_PASSWORD = ""
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.useTestClasspath=true"
 ```
 
-5. Generate a public domain for the application service, then set `APP_BASE_URL` to that HTTPS URL and redeploy.
+Data is discarded when the app stops.
 
-The deployed Swagger UI will be available at `https://<your-domain>/swagger-ui.html`.
+## Web Interface
+
+There is no custom front end. The browser-facing interface is **Swagger UI** at
+`http://localhost:8080/swagger-ui.html`, which lists every endpoint and can call them directly.
+To use the authenticated endpoints, call `/api/auth/signup`, copy the `token` from the response,
+click **Authorize**, and enter `Bearer <token>`.
+
+## Deployment
+
+This is a stateful container app, so platforms built for static sites and serverless functions
+(Vercel, Netlify, GitHub Pages) cannot host it. It needs a long-running JVM plus PostgreSQL.
+Redis is optional: the app falls back to PostgreSQL if Redis is unreachable.
+
+### Free option: Render + Neon
+
+1. **Database:** create a free project at [neon.com](https://neon.com). Copy the connection details.
+2. **App:** at [render.com](https://render.com), choose **New → Web Service**, connect this repo,
+   and pick runtime **Docker** with the **Free** instance type.
+3. Set these environment variables on the Render service:
+
+```text
+SPRING_DATASOURCE_URL=jdbc:postgresql://<neon-host>/<db>?sslmode=require
+SPRING_DATASOURCE_USERNAME=<neon-user>
+SPRING_DATASOURCE_PASSWORD=<neon-password>
+JWT_SECRET=<random value, at least 32 characters>
+APP_BASE_URL=https://<your-service>.onrender.com
+```
+
+4. Optionally add a free **Render Key Value** instance for caching and rate limiting, then set
+   `SPRING_DATA_REDIS_HOST` and `SPRING_DATA_REDIS_PORT` to its internal host and port.
+
+Free-tier limits worth knowing: Render spins the service down after 15 minutes of inactivity, so the
+next request takes roughly a minute to respond, and Neon suspends the database after 5 minutes idle.
+Render's own free PostgreSQL is deleted 30 days after creation, which is why Neon is used instead.
+
+Swagger UI is then available at `https://<your-service>.onrender.com/swagger-ui.html`.
 
 ## Usage Examples
 

@@ -1,0 +1,28 @@
+src/main/java/com/urlshortener/service/UrlService.java
+  s_70cbbdc603895f::t_029962eee42d32 91,142,162-178
+README.md
+  s_70cbbdc603895f::t_a10be63a7d24ae 117-119,121,123-126,129-133,136-137,139-141,143
+  h_e0c30ce2baaad1 138
+  s_70cbbdc603895f::t_78123869ac11e4 92-114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6d92a37fdffaf3a3c44076815f1fe84920ee8d4a",
+  "prompts": {},
+  "humans": {
+    "h_e0c30ce2baaad1": {
+      "author": "junedNayab <mohammed32nayab@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_70cbbdc603895f": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "fcb04c3e-512c-4217-be30-130ebe479867",
+        "model": "copilot/claude-opus-5"
+      },
+      "human_author": "junedNayab <mohammed32nayab@gmail.com>"
+    }
+  }
+}

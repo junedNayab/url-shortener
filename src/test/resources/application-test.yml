@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+
+app:
+  jwt:
+    secret: TestSecretKeyForJWTThatIsAtLeast256BitsLongForHS256AlgorithmTest
+    expiration-ms: 86400000
+  base-url: http://localhost:8080
+  rate-limit:
+    max-requests: 1000
+    window-seconds: 60
